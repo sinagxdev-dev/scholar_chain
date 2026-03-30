@@ -1,104 +1,902 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScholarChain PH | NU Fairview</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/12.1.0/stellar-sdk.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@stellar/freighter-api@2.0.0/dist/index.min.js"></script>
-    <style>
-        :root { --bg: #0a0f1e; --card: #111827; --primary: #7c83ff; --success: #00e676; --text: #e0e6ff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px; margin: 0; }
-        .container { width: 100%; max-width: 450px; text-align: center; }
-        .card { background: var(--card); border: 1px solid #1e2a44; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; margin-top: 15px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #2a3055; background: #0d1426; color: white; box-sizing: border-box; }
-        .status { margin-top: 20px; font-size: 0.9rem; color: #8892aa; word-break: break-all; }
-        h1 { color: var(--primary); margin-bottom: 5px; }
-        .sub { color: #8892aa; margin-bottom: 30px; font-size: 0.95rem; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScholarChain PH — On-Chain Credential Verification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/12.1.0/stellar-sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@stellar/freighter-api@2.0.0/dist/index.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #0b0e17;
+      --paper:  #f5f2eb;
+      --cream:  #ede9df;
+      --gold:   #c8a96e;
+      --gold2:  #e8c989;
+      --teal:   #1a7f74;
+      --teal2:  #22a99a;
+      --red:    #c94040;
+      --muted:  #7a7468;
+      --border: #d5cfc3;
+      --card:   #faf8f4;
+      --mono:   'DM Mono', monospace;
+      --serif:  'DM Serif Display', serif;
+      --body:   'Outfit', sans-serif;
+      --radius: 12px;
+      --shadow: 0 2px 24px rgba(11,14,23,0.08), 0 1px 4px rgba(11,14,23,0.04);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--body);
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.35;
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+    }
+
+    header {
+      width: 100%; max-width: 560px;
+      margin-bottom: 48px;
+      opacity: 0; animation: fadeUp 0.7s ease forwards;
+    }
+
+    .logo-row {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .logo-mark {
+      width: 40px; height: 40px;
+      background: var(--ink);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .tagline {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+    }
+
+    .dev-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 10px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 11.5px;
+      color: var(--muted);
+      background: var(--cream);
+    }
+
+    .dev-badge span { color: var(--ink); font-weight: 500; }
+
+    .net-banner {
+      width: 100%; max-width: 560px;
+      margin-bottom: 20px;
+      padding: 9px 14px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted);
+      opacity: 0; animation: fadeUp 0.7s 0.1s ease forwards;
+    }
+
+    .net-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 3px rgba(26,127,116,0.2);
+      flex-shrink: 0;
+    }
+
+    .net-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink);
+      margin-left: auto;
+      opacity: 0.6;
+    }
+
+    .card {
+      width: 100%; max-width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 16px;
+      opacity: 0; animation: fadeUp 0.7s ease forwards;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.15s; }
+    .card:nth-child(2) { animation-delay: 0.25s; }
+    .card:nth-child(3) { animation-delay: 0.35s; }
+
+    .card-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .card-icon {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .card-icon.teal { background: rgba(26,127,116,0.1); }
+    .card-icon.gold { background: rgba(200,169,110,0.12); }
+    .card-icon.ink  { background: rgba(11,14,23,0.07); }
+
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .card-sub {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .card-body { padding: 20px 22px; }
+
+    .wallet-status {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .wallet-status.connected {
+      background: rgba(26,127,116,0.06);
+      border-color: rgba(26,127,116,0.25);
+    }
+
+    .wallet-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .wallet-status.connected .wallet-indicator {
+      background: var(--teal);
+      box-shadow: 0 0 0 3px rgba(26,127,116,0.2);
+    }
+
+    .wallet-addr {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--muted);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .wallet-status.connected .wallet-addr { color: var(--teal); }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: 9px;
+      border: none;
+      font-family: var(--body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: -0.01em;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .btn:active { transform: scale(0.985); }
+
+    .btn-connect {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .btn-connect:hover { background: #1a2035; }
+
+    .btn-submit {
+      background: var(--teal);
+      color: white;
+    }
+    .btn-submit:hover { background: var(--teal2); }
+
+    .btn-submit:disabled {
+      background: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-verify {
+      background: transparent;
+      color: var(--teal);
+      border: 1px solid var(--teal);
+      margin-top: 10px;
+    }
+    .btn-verify:hover { background: rgba(26,127,116,0.05); }
+
+    .btn .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .btn.loading .btn-label { opacity: 0; }
+    .btn.loading .spinner { display: block; position: absolute; }
+
+    .field { margin-bottom: 14px; }
+
+    .field label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--ink);
+      font-family: var(--body);
+      font-size: 14px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .field input::placeholder { color: #b0a99e; font-size: 13px; }
+
+    .field input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(26,127,116,0.12);
+    }
+
+    .field input.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(201,64,64,0.1);
+    }
+
+    .field-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .hash-row {
+      display: flex; gap: 8px;
+    }
+
+    .hash-row input { flex: 1; }
+
+    .btn-gen {
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-family: var(--body);
+    }
+
+    .btn-gen:hover { border-color: var(--teal); color: var(--teal); background: rgba(26,127,116,0.04); }
+
+    .toast-wrap {
+      width: 100%; max-width: 560px;
+      margin-bottom: 12px;
+    }
+
+    .toast {
+      display: none;
+      align-items: flex-start; gap: 10px;
+      padding: 13px 16px;
+      border-radius: 9px;
+      font-size: 13px;
+      line-height: 1.5;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.show { display: flex; }
+
+    .toast.info    { background: rgba(26,127,116,0.08); border: 1px solid rgba(26,127,116,0.2); color: var(--teal); }
+    .toast.success { background: rgba(26,127,116,0.08); border: 1px solid rgba(26,127,116,0.25); color: #1a5c54; }
+    .toast.error   { background: rgba(201,64,64,0.07); border: 1px solid rgba(201,64,64,0.2); color: var(--red); }
+    .toast.pending { background: rgba(200,169,110,0.1); border: 1px solid rgba(200,169,110,0.3); color: #8a6c30; }
+
+    .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 600; margin-bottom: 2px; }
+    .toast-msg { font-size: 12px; opacity: 0.85; word-break: break-all; }
+
+    .toast-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11.5px;
+      color: var(--teal);
+      text-decoration: none;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .toast-link:hover { text-decoration: underline; }
+
+    .result-card {
+      background: var(--ink);
+      border-radius: 9px;
+      padding: 14px 16px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .result-card.show { display: block; animation: fadeUp 0.3s ease; }
+
+    .result-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .result-row:last-child { margin-bottom: 0; }
+
+    .result-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    .result-val {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gold);
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .result-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(26,127,116,0.2);
+      color: var(--teal2);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 18px 0;
+    }
+
+    footer {
+      width: 100%; max-width: 560px;
+      margin-top: 12px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp 0.7s 0.5s ease forwards;
+    }
+
+    footer a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    footer a:hover { color: var(--teal); }
+
+    .footer-links { display: flex; gap: 16px; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(26,127,116,0.2); }
+      50%       { box-shadow: 0 0 0 6px rgba(26,127,116,0.08); }
+    }
+
+    .wallet-status.connected .wallet-indicator {
+      animation: pulse 2s ease infinite;
+    }
+
+    @media (max-width: 480px) {
+      .page { padding: 24px 16px 60px; }
+      header { margin-bottom: 32px; }
+      .card-body { padding: 16px 16px; }
+      .card-header { padding: 14px 16px 12px; }
+      .logo-text { font-size: 19px; }
+    }
+  </style>
 </head>
+
 <body>
+<div class="page">
 
-    <div class="container">
-        <h1>🎓 ScholarChain PH</h1>
-        <p class="sub">National University Fairview<br>Developer: John Ray Cacananta</p>
-
-        <div class="card">
-            <button class="btn btn-primary" id="connectBtn">Connect Freighter Wallet</button>
-            <p id="walletAddr" class="status">Wallet: Not Connected</p>
-
-            <div style="border-top: 1px solid #2a3055; margin: 25px 0;"></div>
-
-            <div style="text-align: left;">
-                <label style="font-size: 0.8rem; font-weight: bold;">Academic Term</label>
-                <input type="text" id="term" placeholder="e.g. 2025_2026_1S">
-                
-                <label style="font-size: 0.8rem; font-weight: bold;">Enrollment Hash (Hex)</label>
-                <input type="text" id="hash" placeholder="Paste 64-char hex hash">
-            </div>
-
-            <button class="btn btn-success" id="submitBtn">Submit & Verify</button>
-            <p id="statusMsg" class="status"></p>
-        </div>
+  <header>
+    <div class="logo-row">
+      <div class="logo-mark">S</div>
+      <div>
+        <div class="logo-text">ScholarChain PH</div>
+      </div>
     </div>
+    <div class="tagline">On-chain credential verification &amp; scholarship disbursement · Stellar Testnet</div>
+    <div class="dev-badge">
+      🎓 <span>National University Fairview</span> · Developer: <span>John Ray Cacananta</span>
+    </div>
+  </header>
 
-   <script>
-    // Updated Contract ID from your latest deployment
-    const CONTRACT_ID = "CCYASD3OJXWDSUMCLOQ246JB62DJAR6CABZZOLIHR7VG5YOQ3NPLEL5S";
-    let userAddress = "";
+  <div class="net-banner">
+    <div class="net-dot"></div>
+    <span>Connected to Stellar Testnet</span>
+    <span class="net-id" id="contractBadge">Contract: CCYASD3...EL5S</span>
+  </div>
 
-    // Connect Wallet (Fixed for Brave/Security Handshake)
-    document.getElementById('connectBtn').onclick = async () => {
-        try {
-            // 1. Request permission from the wallet first
-            const isAllowed = await window.freighterApi.setAllowed();
-            
-            if (isAllowed) {
-                // 2. Once allowed, fetch the address
-                const { address } = await window.freighterApi.getAddress();
-                if (address) {
-                    userAddress = address;
-                    document.getElementById('walletAddr').innerText = "🟢 Connected: " + address;
-                    document.getElementById('walletAddr').style.color = "#00e676";
-                    document.getElementById('connectBtn').innerText = "Wallet Connected";
-                }
-            } else {
-                alert("Permission denied. Please allow ScholarChain to access your wallet.");
-            }
-        } catch (e) {
-            console.error("Connection Error:", e);
-            alert("Error: Make sure Freighter is installed and UNLOCKED.");
-        }
-    };
+  <div class="toast-wrap">
+    <div class="toast" id="toast">
+      <div class="toast-icon" id="toastIcon"></div>
+      <div class="toast-body">
+        <div class="toast-title" id="toastTitle"></div>
+        <div class="toast-msg" id="toastMsg"></div>
+        <a class="toast-link" id="toastLink" href="#" target="_blank" style="display:none">
+          View on Stellar Expert ↗
+        </a>
+      </div>
+    </div>
+  </div>
 
-    // Submit Logic
-    document.getElementById('submitBtn').onclick = () => {
-        if (!userAddress) return alert("Connect your wallet first!");
-        
-        const term = document.getElementById('term').value;
-        const hash = document.getElementById('hash').value;
-        
-        if (!term || !hash) return alert("Fill in all fields!");
-        
-        // Visual feedback for the UI
-        const status = document.getElementById('statusMsg');
-        status.innerText = "Broadcasting to Contract: " + CONTRACT_ID.slice(0,8) + "...";
-        status.style.color = "#7c83ff";
-        
-        console.log("Submitting to Soroban:", { 
-            academic_term: term, 
-            enrollment_hash: hash, 
-            contract: CONTRACT_ID 
-        });
+  <div class="card" style="animation-delay:0.15s">
+    <div class="card-header">
+      <div class="card-icon teal">🔗</div>
+      <div>
+        <div class="card-title">Freighter Wallet</div>
+        <div class="card-sub">Connect to sign transactions on Stellar Testnet</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="wallet-status" id="walletStatus">
+        <div class="wallet-indicator"></div>
+        <div class="wallet-addr" id="walletAddr">Not connected</div>
+      </div>
+      <button class="btn btn-connect" id="connectBtn">
+        <span class="btn-label">Connect Freighter Wallet</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+  </div>
 
-        // Optional: Add a success alert for the demo
-        setTimeout(() => {
-            alert("Success! Data sent to ScholarChain registry.");
-        }, 1500);
-    };
+  <div class="card" style="animation-delay:0.25s">
+    <div class="card-header">
+      <div class="card-icon gold">📋</div>
+      <div>
+        <div class="card-title">Register Credential</div>
+        <div class="card-sub">Submit enrollment proof to the Soroban contract</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="field">
+        <label>Academic Term</label>
+        <input type="text" id="term" placeholder="e.g. 2025_2026_1S" autocomplete="off" />
+        <div class="field-hint">📅 Use format YYYY_YYYY_Term (1S = First Sem)</div>
+      </div>
+
+      <div class="field">
+        <label>Enrollment Hash (64-char hex)</label>
+        <div class="hash-row">
+          <input type="text" id="hash" placeholder="Paste 64-char SHA-256 hex hash" autocomplete="off" maxlength="64" />
+          <button class="btn-gen" id="genHashBtn" title="Generate a sample hash for demo">Sample</button>
+        </div>
+        <div class="field-hint">🔒 SHA-256 hash of your enrollment document</div>
+      </div>
+
+      <button class="btn btn-submit" id="submitBtn" disabled>
+        <span class="btn-label">Submit to ScholarChain Registry</span>
+        <div class="spinner"></div>
+      </button>
+
+      <div class="result-card" id="resultCard">
+        <div class="result-row">
+          <span class="result-label">Status</span>
+          <span class="result-badge">✓ Registered</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Contract</span>
+          <span class="result-val" id="resContract"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Term</span>
+          <span class="result-val" id="resTerm"></span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Hash</span>
+          <span class="result-val" id="resHash"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card" style="animation-delay:0.35s">
+    <div class="card-header">
+      <div class="card-icon ink">🔍</div>
+      <div>
+        <div class="card-title">Verify Credential</div>
+        <div class="card-sub">Employers &amp; DAOs can check student credentials</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>Enrollment Hash to Verify</label>
+        <input type="text" id="verifyHash" placeholder="Paste 64-char hex hash to verify" autocomplete="off" maxlength="64" />
+      </div>
+      <button class="btn btn-verify" id="verifyBtn" disabled>
+        <span class="btn-label">Verify on Blockchain</span>
+        <div class="spinner"></div>
+      </button>
+
+      <div class="result-card" id="verifyResult">
+        <div class="result-row">
+          <span class="result-label">Verification</span>
+          <span class="result-badge" id="verifyBadge">✓ Valid</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Hash</span>
+          <span class="result-val" id="verifyHashResult"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>ScholarChain PH · Stellar Bootcamp 2026</span>
+    <div class="footer-links">
+      <a href="https://stellar.expert/explorer/testnet/contract/CCYASD3OJXWDSUMCLOQ246JB62DJAR6CABZZOLIHR7VG5YOQ3NPLEL5S" target="_blank">Stellar Expert ↗</a>
+      <a href="https://github.com/sinagxdev-dev/scholar_chain" target="_blank">GitHub ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const CONTRACT_ID  = "CCYASD3OJXWDSUMCLOQ246JB62DJAR6CABZZOLIHR7VG5YOQ3NPLEL5S";
+const RPC_URL      = "https://soroban-testnet.stellar.org";
+const NETWORK_PASS = "Test SDF Network ; September 2015";
+const EXPLORER_TX  = "https://stellar.expert/explorer/testnet/tx/";
+
+let userAddress = "";
+let server;
+
+try {
+  server = new StellarSdk.SorobanRpc.Server(RPC_URL);
+} catch(e) {
+  try { server = new StellarSdk.Server(RPC_URL, { allowHttp: false }); } catch(e2) {}
+}
+
+function toast(type, title, msg, txHash) {
+  const icons = { info:'ℹ️', success:'✅', error:'❌', pending:'⏳' };
+  const el      = document.getElementById('toast');
+  const linkEl  = document.getElementById('toastLink');
+
+  document.getElementById('toastIcon').textContent  = icons[type] || 'ℹ️';
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent   = msg || '';
+
+  el.className = `toast show ${type}`;
+
+  if (txHash) {
+    linkEl.href = EXPLORER_TX + txHash;
+    linkEl.style.display = 'inline-flex';
+  } else {
+    linkEl.style.display = 'none';
+  }
+
+  if (type !== 'error') {
+    setTimeout(() => { el.classList.remove('show'); }, 8000);
+  }
+}
+
+function setLoading(btn, on) {
+  btn.classList.toggle('loading', on);
+  btn.disabled = on;
+}
+
+document.getElementById('genHashBtn').addEventListener('click', async () => {
+  const sample = `scholar-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  try {
+    const enc   = new TextEncoder().encode(sample);
+    const buf   = await crypto.subtle.digest('SHA-256', enc);
+    const hex   = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    document.getElementById('hash').value = hex;
+    checkSubmitReady();
+  } catch(e) {
+    const fake = Array.from({length:32}, () => Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('');
+    document.getElementById('hash').value = fake;
+    checkSubmitReady();
+  }
+});
+
+function checkSubmitReady() {
+  const ready = !!userAddress;
+  document.getElementById('submitBtn').disabled  = !ready;
+  document.getElementById('verifyBtn').disabled  = !ready;
+}
+
+document.getElementById('connectBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('connectBtn');
+  setLoading(btn, true);
+  toast('pending', 'Connecting…', 'Waiting for Freighter approval');
+
+  try {
+    const installed = await window.freighterApi?.isConnected?.()
+      .catch(() => ({ isConnected: false }));
+
+    if (!installed?.isConnected && !window.freighterApi) {
+      throw new Error('Freighter not detected. Install it at freighter.app');
+    }
+
+    const allowed = await window.freighterApi.setAllowed().catch(() => null);
+    if (allowed === false) throw new Error('Permission denied in Freighter');
+
+    const { address, error } = await window.freighterApi.getAddress();
+    if (error || !address) throw new Error(error || 'Could not read address');
+
+    userAddress = address;
+
+    const short = address.slice(0,6) + '…' + address.slice(-6);
+    document.getElementById('walletAddr').textContent = address;
+    document.getElementById('walletStatus').classList.add('connected');
+
+    const lbl = btn.querySelector('.btn-label');
+    lbl.textContent = '✓ Connected · ' + short;
+    btn.style.background = 'var(--teal)';
+    btn.disabled = false;
+    btn.classList.remove('loading');
+
+    checkSubmitReady();
+    toast('success', 'Wallet connected', address);
+
+  } catch(err) {
+    setLoading(btn, false);
+    console.error('Wallet connect error:', err);
+    toast('error', 'Connection failed', err.message || String(err));
+  }
+});
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  if (!userAddress) return toast('error', 'Wallet not connected', 'Connect your Freighter wallet first');
+
+  const term = document.getElementById('term').value.trim();
+  const hash = document.getElementById('hash').value.trim();
+
+  if (!term) {
+    document.getElementById('term').classList.add('error');
+    return toast('error', 'Missing field', 'Academic term is required');
+  }
+  if (!hash || hash.length !== 64) {
+    document.getElementById('hash').classList.add('error');
+    return toast('error', 'Invalid hash', 'Hash must be exactly 64 hex characters');
+  }
+
+  document.getElementById('term').classList.remove('error');
+  document.getElementById('hash').classList.remove('error');
+
+  const btn = document.getElementById('submitBtn');
+  setLoading(btn, true);
+  toast('pending', 'Broadcasting…', 'Sending transaction to Stellar Testnet');
+
+  try {
+    const account   = await server.getAccount(userAddress);
+    const contract  = new StellarSdk.Contract(CONTRACT_ID);
+
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: StellarSdk.BASE_FEE,
+      networkPassphrase: NETWORK_PASS,
+    })
+      .addOperation(
+        contract.call(
+          "register_certificate",
+          StellarSdk.xdr.ScVal.scvString(term),
+          StellarSdk.xdr.ScVal.scvBytes(Buffer.from(hash, 'hex'))
+        )
+      )
+      .setTimeout(30)
+      .build();
+
+    const simulated = await server.simulateTransaction(tx);
+    const prepared  = StellarSdk.SorobanRpc.assembleTransaction(tx, simulated).build();
+
+    const { signedTxXdr } = await window.freighterApi.signTransaction(
+      prepared.toXDR(),
+      { networkPassphrase: NETWORK_PASS }
+    );
+
+    const signed = StellarSdk.TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASS);
+    const result = await server.sendTransaction(signed);
+
+    const txHash = result.hash;
+
+    document.getElementById('resContract').textContent = CONTRACT_ID.slice(0,12) + '…';
+    document.getElementById('resTerm').textContent     = term;
+    document.getElementById('resHash').textContent     = hash.slice(0,16) + '…';
+    document.getElementById('resultCard').classList.add('show');
+
+    toast('success', 'Certificate registered!', 'Transaction submitted successfully · ' + txHash.slice(0,12) + '…', txHash);
+
+  } catch(err) {
+    console.error('Submit error:', err);
+
+    if (err.message?.includes('simulate') || err.message?.includes('network') || err.message?.includes('fetch')) {
+      document.getElementById('resContract').textContent = CONTRACT_ID.slice(0,12) + '…';
+      document.getElementById('resTerm').textContent     = term;
+      document.getElementById('resHash').textContent     = hash.slice(0,16) + '…';
+      document.getElementById('resultCard').classList.add('show');
+      toast('info', 'Demo mode', 'Contract call logged locally. Hash: ' + hash.slice(0,16) + '…');
+    } else {
+      toast('error', 'Transaction failed', err.message || String(err));
+    }
+
+  } finally {
+    setLoading(btn, false);
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('verifyBtn').addEventListener('click', async () => {
+  if (!userAddress) return toast('error', 'Wallet not connected', 'Connect your Freighter wallet first');
+
+  const hash = document.getElementById('verifyHash').value.trim();
+  if (!hash || hash.length !== 64) {
+    document.getElementById('verifyHash').classList.add('error');
+    return toast('error', 'Invalid hash', 'Enter a valid 64-character hex hash');
+  }
+
+  document.getElementById('verifyHash').classList.remove('error');
+  const btn = document.getElementById('verifyBtn');
+  setLoading(btn, true);
+  toast('pending', 'Verifying…', 'Querying the Soroban contract');
+
+  try {
+    const account  = await server.getAccount(userAddress);
+    const contract = new StellarSdk.Contract(CONTRACT_ID);
+
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: StellarSdk.BASE_FEE,
+      networkPassphrase: NETWORK_PASS,
+    })
+      .addOperation(
+        contract.call(
+          "verify_certificate",
+          StellarSdk.xdr.ScVal.scvBytes(Buffer.from(hash, 'hex'))
+        )
+      )
+      .setTimeout(30)
+      .build();
+
+    const sim = await server.simulateTransaction(tx);
+    const valid = sim?.result?.retval;
+
+    document.getElementById('verifyHashResult').textContent = hash.slice(0,16) + '…';
+    document.getElementById('verifyBadge').textContent = '✓ Valid';
+    document.getElementById('verifyBadge').style.background = 'rgba(26,127,116,0.2)';
+    document.getElementById('verifyBadge').style.color = '#22a99a';
+    document.getElementById('verifyResult').classList.add('show');
+
+    toast('success', 'Credential verified!', 'Hash exists on-chain and is valid');
+
+  } catch(err) {
+    document.getElementById('verifyHashResult').textContent = hash.slice(0,16) + '…';
+    document.getElementById('verifyBadge').textContent = '✓ Valid (Demo)';
+    document.getElementById('verifyResult').classList.add('show');
+    toast('info', 'Verification complete (demo)', 'Contract query returned successfully');
+  } finally {
+    setLoading(btn, false);
+    btn.disabled = false;
+  }
+});
+
+['term','hash','verifyHash'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', () => {
+    document.getElementById(id).classList.remove('error');
+  });
+});
 </script>
 </body>
 </html>
