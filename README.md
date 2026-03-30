@@ -2,7 +2,7 @@
 
 > On-chain scholarship disbursement and credential verification for Filipino students — built on Stellar Soroban.
 
-**Developer:** John Ray Cacananta · National University Fairview  
+**Developer:** John Ray Cacananta 
 **Event:** Stellar Philippines UniTour 2026 · Rise In Bootcamp  
 **Network:** Stellar Testnet
 
@@ -20,13 +20,20 @@
 
 ## Problem
 
-A fourth-year BS Computer Science student at Polytechnic University of the Philippines receives a CHED/DOST scholarship stipend — but the ₱7,000/month disbursement is delayed **1 to 12 months** because universities manually verify enrollment status before releasing funds. The Commission on Audit found **₱1.748 billion** in scholarship funds unreleased, forcing scholars to skip meals, take on debt, and lose academic focus.
+In the Philippines, the "State University and College (SUC)" system serves millions of students, many of whom rely entirely on government stipends (CHED, DOST, or LGU grants) to survive. However, the path from enrollment to disbursement is broken by a manual verification bottleneck:
+- The 1.7 Billion Peso Gap: According to Commission on Audit (COA) reports, over ₱1.748 billion in scholarship funds often remains unreleased due to administrative delays.
+- Manual Validation: SUC registrars must manually verify thousands of physical "Certificates of Enrollment" before funds can be moved. This process takes 1 to 12 months.
+- The Student Toll: For scholars in state universities, these delays lead to "delayed degrees," forced student loans, and increased dropout rates as students lose the financial focus needed to stay in school.
 
 ---
 
 ## Solution
 
-ScholarChain PH replaces the manual bursar process with a Soroban smart contract on Stellar. A university registrar registers the student's enrollment credential (as a SHA-256 hash) on-chain. Upon successful verification, the contract releases USDC directly to the student's Freighter wallet — in under 5 seconds, with near-zero fees.
+ScholarChain PH provides a decentralized infrastructure that automates the trust between State Universities, Government Agencies, and the Student. By leveraging Soroban Smart Contracts on the Stellar Network, we replace months of paperwork with seconds of code:
+- Digital Fingerprinting: SUC Registrars upload a SHA-256 hash (a digital fingerprint) of a student's validated enrollment directly to the Stellar blockchain.
+- Instant Smart Verification: The funding agency (CHED/DOST) no longer needs to wait for physical mail. The smart contract automatically verifies the student’s status against the on-chain hash.
+- Programmable Disbursement: Upon successful verification, the contract releases funds in USDC (or a Philippine Peso stablecoin) directly to the student's Freighter Wallet.
+- Public Accountability: Every peso moved is recorded on the public ledger (Stellar Expert), ensuring that the ₱1.7B "funding gap" is closed through real-time, transparent auditing.
 
 ---
 
@@ -121,19 +128,19 @@ stellar keys generate --global my-key --network testnet
 stellar keys fund my-key --network testnet
 
 # Deploy
-stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/scholar_chain_ph.wasm \
-  --source my-key \
+stellar contract deploy `
+  --wasm target\wasm32v1-none\release\scholarchain_ph.wasm `
+  --source sinag `
   --network testnet
 
 # Initialize (run once after deploy)
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --source my-key \
-  --network testnet \
-  -- initialize \
-  --admin <YOUR_G_ADDRESS> \
-  --usdc_token <USDC_TOKEN_ADDRESS> \
+stellar contract invoke `
+  --id <YOUR_NEW_CONTRACT_ID> `
+  --source sinag `
+  --network testnet `
+  -- initialize `
+  --admin <YOUR_G_ADDRESS_FROM_FREIGHTER> `
+  --usdc_token CB763353B0D2AA246B5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C5C `
   --reward_amount 500000000
 ```
 
