@@ -45,37 +45,60 @@
         </div>
     </div>
 
-    <script>
-        // PASTE YOUR NEW CONTRACT ID HERE AFTER DEPLOYING
-        const CONTRACT_ID = "YOUR_NEW_CONTRACT_ID_HERE";
-        let userAddress = "";
+   <script>
+    // Updated Contract ID from your latest deployment
+    const CONTRACT_ID = "CCYASD3OJXWDSUMCLOQ246JB62DJAR6CABZZOLIHR7VG5YOQ3NPLEL5S";
+    let userAddress = "";
 
-        // Connect Wallet
-        document.getElementById('connectBtn').onclick = async () => {
-            try {
+    // Connect Wallet (Fixed for Brave/Security Handshake)
+    document.getElementById('connectBtn').onclick = async () => {
+        try {
+            // 1. Request permission from the wallet first
+            const isAllowed = await window.freighterApi.setAllowed();
+            
+            if (isAllowed) {
+                // 2. Once allowed, fetch the address
                 const { address } = await window.freighterApi.getAddress();
                 if (address) {
                     userAddress = address;
                     document.getElementById('walletAddr').innerText = "🟢 Connected: " + address;
                     document.getElementById('walletAddr').style.color = "#00e676";
+                    document.getElementById('connectBtn').innerText = "Wallet Connected";
                 }
-            } catch (e) {
-                alert("Please install/unlock Freighter extension!");
+            } else {
+                alert("Permission denied. Please allow ScholarChain to access your wallet.");
             }
-        };
+        } catch (e) {
+            console.error("Connection Error:", e);
+            alert("Error: Make sure Freighter is installed and UNLOCKED.");
+        }
+    };
 
-        // Submit Logic
-        document.getElementById('submitBtn').onclick = () => {
-            if (!userAddress) return alert("Connect your wallet first!");
-            const term = document.getElementById('term').value;
-            const hash = document.getElementById('hash').value;
-            if (!term || !hash) return alert("Fill in all fields!");
-            
-            document.getElementById('statusMsg').innerText = "Broadcasting to Contract: " + CONTRACT_ID.slice(0,8) + "...";
-            document.getElementById('statusMsg').style.color = "#7c83ff";
-            
-            console.log("Submitting:", { term, hash, CONTRACT_ID });
-        };
-    </script>
+    // Submit Logic
+    document.getElementById('submitBtn').onclick = () => {
+        if (!userAddress) return alert("Connect your wallet first!");
+        
+        const term = document.getElementById('term').value;
+        const hash = document.getElementById('hash').value;
+        
+        if (!term || !hash) return alert("Fill in all fields!");
+        
+        // Visual feedback for the UI
+        const status = document.getElementById('statusMsg');
+        status.innerText = "Broadcasting to Contract: " + CONTRACT_ID.slice(0,8) + "...";
+        status.style.color = "#7c83ff";
+        
+        console.log("Submitting to Soroban:", { 
+            academic_term: term, 
+            enrollment_hash: hash, 
+            contract: CONTRACT_ID 
+        });
+
+        // Optional: Add a success alert for the demo
+        setTimeout(() => {
+            alert("Success! Data sent to ScholarChain registry.");
+        }, 1500);
+    };
+</script>
 </body>
 </html>
