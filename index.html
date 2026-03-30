@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarChain PH | NU Fairview</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/12.1.0/stellar-sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stellar/freighter-api@2.0.0/dist/index.min.js"></script>
+    <style>
+        :root { --bg: #0a0f1e; --card: #111827; --primary: #7c83ff; --success: #00e676; --text: #e0e6ff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px; margin: 0; }
+        .container { width: 100%; max-width: 450px; text-align: center; }
+        .card { background: var(--card); border: 1px solid #1e2a44; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; margin-top: 15px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #2a3055; background: #0d1426; color: white; box-sizing: border-box; }
+        .status { margin-top: 20px; font-size: 0.9rem; color: #8892aa; word-break: break-all; }
+        h1 { color: var(--primary); margin-bottom: 5px; }
+        .sub { color: #8892aa; margin-bottom: 30px; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎓 ScholarChain PH</h1>
+        <p class="sub">National University Fairview<br>Developer: John Ray Cacananta</p>
+
+        <div class="card">
+            <button class="btn btn-primary" id="connectBtn">Connect Freighter Wallet</button>
+            <p id="walletAddr" class="status">Wallet: Not Connected</p>
+
+            <div style="border-top: 1px solid #2a3055; margin: 25px 0;"></div>
+
+            <div style="text-align: left;">
+                <label style="font-size: 0.8rem; font-weight: bold;">Academic Term</label>
+                <input type="text" id="term" placeholder="e.g. 2025_2026_1S">
+                
+                <label style="font-size: 0.8rem; font-weight: bold;">Enrollment Hash (Hex)</label>
+                <input type="text" id="hash" placeholder="Paste 64-char hex hash">
+            </div>
+
+            <button class="btn btn-success" id="submitBtn">Submit & Verify</button>
+            <p id="statusMsg" class="status"></p>
+        </div>
+    </div>
+
+    <script>
+        // PASTE YOUR NEW CONTRACT ID HERE AFTER DEPLOYING
+        const CONTRACT_ID = "YOUR_NEW_CONTRACT_ID_HERE";
+        let userAddress = "";
+
+        // Connect Wallet
+        document.getElementById('connectBtn').onclick = async () => {
+            try {
+                const { address } = await window.freighterApi.getAddress();
+                if (address) {
+                    userAddress = address;
+                    document.getElementById('walletAddr').innerText = "🟢 Connected: " + address;
+                    document.getElementById('walletAddr').style.color = "#00e676";
+                }
+            } catch (e) {
+                alert("Please install/unlock Freighter extension!");
+            }
+        };
+
+        // Submit Logic
+        document.getElementById('submitBtn').onclick = () => {
+            if (!userAddress) return alert("Connect your wallet first!");
+            const term = document.getElementById('term').value;
+            const hash = document.getElementById('hash').value;
+            if (!term || !hash) return alert("Fill in all fields!");
+            
+            document.getElementById('statusMsg').innerText = "Broadcasting to Contract: " + CONTRACT_ID.slice(0,8) + "...";
+            document.getElementById('statusMsg').style.color = "#7c83ff";
+            
+            console.log("Submitting:", { term, hash, CONTRACT_ID });
+        };
+    </script>
+</body>
+</html>
