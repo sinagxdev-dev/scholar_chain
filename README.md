@@ -17,6 +17,8 @@
 | 💻 GitHub Repo | [sinagxdev-dev/scholar_chain](https://github.com/sinagxdev-dev/scholar_chain) |
 
 ---
+<img width="1838" height="867" alt="image" src="https://github.com/user-attachments/assets/47205e0e-d212-4e69-8bc0-4707525a0864" />
+---
 
 ## Problem
 
@@ -169,7 +171,6 @@ stellar contract invoke \
 ```
 
 ---
-<img width="1838" height="867" alt="image" src="https://github.com/user-attachments/assets/47205e0e-d212-4e69-8bc0-4707525a0864" />
 
 ## References
 
