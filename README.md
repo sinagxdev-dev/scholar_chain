@@ -169,7 +169,7 @@ stellar contract invoke \
 ```
 
 ---
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/d05f7e5e-b490-4e16-8f14-99c806e208f5" />
+<img width="1838" height="867" alt="image" src="https://github.com/user-attachments/assets/47205e0e-d212-4e69-8bc0-4707525a0864" />
 
 ## References
 
